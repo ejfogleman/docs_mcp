@@ -1,6 +1,6 @@
 # Docs MCP Server
 
-Tools like SPICE, Verilog, and TeX expose a weakness of LLM-based coding assistants and agents: they are common enough that the model may know "something" about them, but it often guesses incorrectly. For example, if you ask about the `.TRAN` syntax in SPICE, you may get something that looks plausible but is wrong, such as `.TRAN Tstart Tstop Tstep`.
+Tools like SPICE, Verilog, and TeX expose a weakness of LLM-based coding assistants and agents: these tools are common enough that the model may know "something" about them, but it often guesses incorrectly. For example, if you ask about the `.TRAN` syntax in SPICE, you may get something that looks plausible but is wrong, such as `.TRAN Tstart Tstop Tstep`.
 
 This server is meant to solve that problem. It indexes **your** local Markdown manuals into Chroma and serves them as a **stdio MCP server**. MCP clients such as coding agents in an IDE or plugin should usually start the server process themselves rather than requiring you to run a separate long-lived service manually. The server provides `list_reference_manuals` and `search_reference_manuals` tools that return structured objects instead of human-formatted Markdown.
 
@@ -15,6 +15,86 @@ For example, a tool-assisted answer might look like this:
 ```
 
 Instructions to enable the Continue coding agent to automatically start the MCP server are given below, but the setup should be similar for other MCP-capable tools.
+
+## Requirements
+
+To use this server, you need:
+
+1. **Python 3** so you can create the virtual environment and run `server.py`.
+2. **An embedding model** for indexing and search.
+3. **A coding assistant or AI IDE that can use MCP** so it can call this server's tools.
+
+### Embedding model
+
+An embedding model converts text into numeric vectors that capture semantic meaning. In simple terms, it turns a chunk of text such as a manual section, and a user query such as "find the syntax for `.TRAN`", into comparable vector representations.
+
+This server uses embeddings in two places:
+
+- **Indexing:** it reads your markdown manuals, splits them into chunks, generates embeddings for those chunks, and stores them in Chroma.
+- **Lookup/search:** it embeds the user's query, compares that query embedding to the stored manual chunk embeddings, and returns the closest matches.
+
+You can get an embedding model in either of these ways:
+
+- **OpenAI API**
+  - set `EMBEDDING_PROVIDER="openai"`
+  - provide an `OPENAI_API_KEY`
+  - the server uses OpenAI's `text-embedding-3-small` model
+- **Ollama (local)**
+  - install and run Ollama on your machine
+  - use `EMBEDDING_PROVIDER="ollama"`
+  - optionally set `OLLAMA_EMBED_MODEL`
+  - by default, the server uses `nomic-embed-text`
+
+If you use OpenAI, you are getting embeddings through a hosted API key. If you use Ollama, you are getting embeddings from a local model running on your machine.
+
+### MCP-capable coding assistant or AI IDE
+
+You also need a client application that supports MCP and can call this server's tools.
+
+In this README:
+
+- the **server** is this project: `server.py`, which exposes tools such as `list_reference_manuals` and `search_reference_manuals`
+- the **client** is the application that launches and talks to this server, such as Continue, Claude Desktop, Claude Code, or an MCP-capable VS Code setup
+
+What matters is not the assistant name, but whether the **client application** can:
+
+- launch `server.py` as a **stdio MCP server**
+- expose its tools to the assistant
+- allow tool calls during chat or coding sessions
+
+This README uses **Continue** in VS Code or VSCodium as the example client, but other MCP-capable setups may also work, including:
+- **Claude Code**
+- **Claude Desktop**
+- **VS Code with GitHub Copilot**, when MCP support is available and configured
+- other assistants or IDE integrations that support **stdio MCP servers**
+
+Support varies by product version and configuration, so check your client's current MCP documentation if needed.
+
+## Cloning the repo 
+
+Clone the repository from GitHub with:
+
+```bash README.md
+git clone https://github.com/ejfogleman/docs_mcp.git
+cd docs_mcp
+```
+
+If you want to place it somewhere specific on your machine, clone into that directory instead:
+
+```bash README.md
+git clone https://github.com/ejfogleman/docs_mcp.git /path/to/your/DOCS_DIR
+cd /path/to/your/DOCS_DIR
+```
+
+## Setting up the virtual environment
+
+The repo includes a `requirements.txt` file.  Create the local virtual environment and install the dependencies with:
+
+```bash README.md
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
 
 ## What `DOCS_DIR` means
 
@@ -52,16 +132,6 @@ DOCS_DIR/
 │   └── another-manual.md
 ├── server.py
 └── README.md
-```
-
-## Setting up the virtual environment
-
-The repo includes a `requirements.txt` file.  Create the local virtual environment and install the dependencies with:
-
-```bash README.md
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
 ```
 
 ## Indexing
@@ -121,7 +191,7 @@ When started this way, the server runs over stdio and waits for an MCP client to
 
 ### Client-managed startup
 
-If you use Continue or another MCP-capable tool, configure that tool to launch this script. See the `Continue config (config.yaml)` section below for an example. In that setup, the client starts the server process automatically when needed, so you should not also start a second copy manually.
+If you use Continue or another MCP-capable client, configure that client to launch this script over stdio. See the `Continue config (config.yaml)` section below for an example. In that setup, the client starts the server process automatically when needed, so you should not also start a second copy manually.
 
 ## MCP tools
 
