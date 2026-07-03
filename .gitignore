@@ -4,3 +4,4 @@ __pycache__/
 .env
 .central_vector_db/
 mcp_tool_audit.jsonl
+/*/
