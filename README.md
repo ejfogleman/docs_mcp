@@ -260,7 +260,7 @@ Use your own absolute `DOCS_DIR` path in this config. Do not copy `/home/ejf/Pro
 
 ```yaml README.md
 mcpServers:
-  - name: "central-docs"
+  - name: "docs_mcp"
     command: "/absolute/path/to/your/DOCS_DIR/.venv/bin/python3"
     args:
       - "/absolute/path/to/your/DOCS_DIR/server.py"
@@ -273,7 +273,7 @@ mcpServers:
 
 ```yaml README.md
 mcpServers:
-  - name: "central-docs"
+  - name: "docs_mcp"
     command: "/absolute/path/to/your/DOCS_DIR/.venv/bin/python3"
     args:
       - "/absolute/path/to/your/DOCS_DIR/server.py"
@@ -290,7 +290,7 @@ Example:
 
 ```yaml README.md
 mcpServers:
-  - name: "central-docs"
+  - name: "docs_mcp"
     command: "/absolute/path/to/your/DOCS_DIR/.venv/bin/python3"
     args:
       - "/absolute/path/to/your/DOCS_DIR/server.py"
